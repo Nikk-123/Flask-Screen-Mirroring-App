@@ -65,9 +65,6 @@ A Flask-based screen mirroring application that captures your desktop screen and
 
 The application supports mobile touch input, scaling it to the desktop screen size for precise control.
 
-## 🖼️ Preview
-
-![Preview](https://via.placeholder.com/800x400?text=Live+Desktop+Connection)
 
 ## 📝 To Do
 - [ ] Add support for multi-monitor screen capture.
