@@ -37,7 +37,7 @@ A Flask-based screen mirroring application that captures your desktop screen and
 1. Clone the repository:
 
    ```bash
-   git clone https://github.com/your-username/Flask-Screen-Mirroring-App.git
+   https://github.com/Nikk-123/Flask-Screen-Mirroring-App.git
    cd Flask-Screen-Mirroring-App
    ```
 
