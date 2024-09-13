@@ -24,9 +24,13 @@ def capture_screen():
     return None
 
 # Handle remote control actions with accurate scaling for touch control
-def control_mouse_and_keyboard(x, y, action, screen_width, screen_height):
+def control_mouse_and_keyboard(x, y, action, screen_width, screen_height, sensitivity=1.0):
     desktop_width, desktop_height = pyautogui.size()
     
+    # Adjust the touch sensitivity
+    x = x * sensitivity
+    y = y * sensitivity
+
     # Scale the phone's touch coordinates to match desktop resolution
     scaled_x = int(x * desktop_width / screen_width)
     scaled_y = int(y * desktop_height / screen_height)
@@ -41,6 +45,7 @@ def control_mouse_and_keyboard(x, y, action, screen_width, screen_height):
         pyautogui.click(scaled_x, scaled_y)
     elif action == 'scroll':
         pyautogui.scroll(10)
+
 
 @socketio.on('capture')
 def handle_capture():
@@ -60,7 +65,6 @@ def handle_remote_control(data):
     screen_height = data['screen_height']
     
     control_mouse_and_keyboard(x, y, action, screen_width, screen_height)
-
 @app.route('/')
 def index():
     return render_template_string('''
@@ -103,6 +107,14 @@ def index():
                         object-fit: contain;
                         border-radius: 0;
                     }
+                    #virtual-cursor {
+                        position: absolute;
+                        width: 20px;
+                        height: 20px;
+                        background: red;
+                        border-radius: 50%;
+                        pointer-events: none;
+                    }
                 </style>
             </head>
             <body>
@@ -110,11 +122,19 @@ def index():
                 <div class="container">
                     <div class="left">
                         <img id="screen" src="" alt="Shared Screen">
+                        <div id="virtual-cursor"></div>
                     </div>
+                    <label for="sensitivity">Touch Sensitivity:</label>
+                    <input type="range" id="sensitivity" name="sensitivity" min="0.1" max="2.0" step="0.1" value="1.0">
                 </div>
                 <script src="https://cdn.socket.io/4.0.0/socket.io.min.js"></script>
                 <script>
                     const socket = io();
+                    let sensitivity = 1.0;
+
+                    document.getElementById('sensitivity').addEventListener('input', function(event) {
+                        sensitivity = parseFloat(event.target.value);
+                    });
 
                     function startCapture() {
                         setInterval(() => {
@@ -137,8 +157,13 @@ def index():
                         
                         const x = event.clientX - screenRect.left;
                         const y = event.clientY - screenRect.top;
+
+                        // Update virtual cursor position
+                        const cursor = document.getElementById('virtual-cursor');
+                        cursor.style.left = x + 'px';
+                        cursor.style.top = y + 'px';
                         
-                        socket.emit('remote_control', { x: x, y: y, action: 'move', screen_width: screenWidth, screen_height: screenHeight });
+                        socket.emit('remote_control', { x: x, y: y, action: 'move', screen_width: screenWidth, screen_height: screenHeight, sensitivity: sensitivity });
                     });
 
                     document.addEventListener('click', function(event) {
@@ -150,7 +175,7 @@ def index():
                         const x = event.clientX - screenRect.left;
                         const y = event.clientY - screenRect.top;
                         
-                        socket.emit('remote_control', { x: x, y: y, action: 'click', screen_width: screenWidth, screen_height: screenHeight });
+                        socket.emit('remote_control', { x: x, y: y, action: 'click', screen_width: screenWidth, screen_height: screenHeight, sensitivity: sensitivity });
                     });
 
                     // Start capturing when the page loads
